@@ -12,11 +12,13 @@
 
 #include "WirtualnaKamDoc.h"
 #include "WirtualnaKamView.h"
+#include "Kamera.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
+Kamera kam;
 
 // CWirtualnaKamView
 
@@ -57,12 +59,23 @@ void CWirtualnaKamView::OnDraw(CDC* pDC)
 {
 	CWirtualnaKamDoc* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
+
+	Prostokat rect = Prostokat(Punkt(50, 50, 10), Punkt(100, 50, 10), Punkt(100, 100, 10), Punkt(50, 100, 10));
+
 	if (!pDoc)
 		return;
 
 	// TODO: tutaj dodaj kod rysowania danych natywnych
-	pDC->MoveTo(100, 100);
-	pDC->LineTo(200, 200);
+	auto p1 = kam.ObliczPozycjePunktu(rect.w1);
+	auto p2 = kam.ObliczPozycjePunktu(rect.w2);
+	auto p3 = kam.ObliczPozycjePunktu(rect.w3);
+	auto p4 = kam.ObliczPozycjePunktu(rect.w4);
+
+	pDC->MoveTo(p1.x, p1.y);
+	pDC->LineTo(p2.x, p2.y);
+	pDC->LineTo(p3.x, p3.y);
+	pDC->LineTo(p4.x, p4.y);
+	pDC->LineTo(p1.x, p1.y);
 }
 
 
