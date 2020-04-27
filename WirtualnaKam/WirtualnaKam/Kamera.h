@@ -1,6 +1,6 @@
 #pragma once
 
-const int szer = 220;
+const int szer = 200;
 const int wys = 150;
 
 class Punkt2D
@@ -60,5 +60,13 @@ public:
 	double oz = 0;
 
 	double zoom = 1;
+
+public:
+	void RuchX(double krok);
+	void RuchY(double krok);
+	void RuchZ(double krok);
+	void ObrotOX(double krok);
+	void ObrotOY(double krok);
+	void ObrotOZ(double krok);
 };
 

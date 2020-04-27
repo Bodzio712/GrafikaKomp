@@ -30,6 +30,7 @@ BEGIN_MESSAGE_MAP(CWirtualnaKamView, CView)
 	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CWirtualnaKamView::OnFilePrintPreview)
 	ON_WM_CONTEXTMENU()
+	ON_WM_KEYDOWN()
 	ON_WM_RBUTTONUP()
 END_MESSAGE_MAP()
 
@@ -60,7 +61,9 @@ void CWirtualnaKamView::OnDraw(CDC* pDC)
 	CWirtualnaKamDoc* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
 
-	Prostokat rect = Prostokat(Punkt(50, 50, 10), Punkt(100, 50, 10), Punkt(100, 100, 10), Punkt(50, 100, 10));
+	//Prostokat rect = Prostokat(Punkt(0, 50, 50), Punkt(50, 50, 50), Punkt(50, 0, 50), Punkt(0, 0, 50));
+	Prostokat rect = Prostokat(Punkt(0, 50, 50), Punkt(50, 50, 50), Punkt(50, 0, 50), Punkt(0, 0, 50));
+
 
 	if (!pDoc)
 		return;
@@ -110,6 +113,67 @@ void CWirtualnaKamView::OnRButtonUp(UINT /* nFlags */, CPoint point)
 	ClientToScreen(&point);
 	OnContextMenu(this, point);
 }
+/////////////////////////////////////////////////////////////////////////////
+// Bindowanie klawiszy
+BOOL CWirtualnaKamView::PreTranslateMessage(MSG* pMsg)
+{
+	int i=0;
+	if (pMsg->message == WM_KEYDOWN)
+	{
+		switch (pMsg->wParam)
+		{
+		case VK_UP:
+			kam.RuchY(1);
+			Invalidate();
+			break;
+		case VK_DOWN:
+			kam.RuchY(-1);
+			Invalidate();
+			break;
+		case VK_LEFT:
+			kam.RuchZ(1);
+			Invalidate();
+			break;
+		case VK_RIGHT:
+			kam.RuchZ(-1);
+			Invalidate();
+			break;
+		case VK_SHIFT:
+			kam.RuchX(1);
+			Invalidate();
+			break;
+		case VK_CONTROL:
+			kam.RuchX(-1);
+			Invalidate();
+			break;
+		case VK_NUMPAD2:
+			kam.ObrotOX(0.03);
+			Invalidate();
+			break;
+		case VK_NUMPAD8:
+			kam.ObrotOX(-0.03);
+			Invalidate();
+			break;
+		case VK_NUMPAD4:
+			kam.ObrotOY(0.03);
+			Invalidate();
+			break;
+		case VK_NUMPAD6:
+			kam.ObrotOY(-0.03);
+			Invalidate();
+			break;
+		case VK_PRIOR:
+			kam.ObrotOZ(0.03);
+			Invalidate();
+			break;
+		case VK_NEXT:
+			kam.ObrotOZ(-0.03);
+			Invalidate();
+			break;
+		}
+	}
+	return __super::PreTranslateMessage(pMsg);
+}
 
 void CWirtualnaKamView::OnContextMenu(CWnd* /* pWnd */, CPoint point)
 {
@@ -117,8 +181,6 @@ void CWirtualnaKamView::OnContextMenu(CWnd* /* pWnd */, CPoint point)
 	theApp.GetContextMenuManager()->ShowPopupMenu(IDR_POPUP_EDIT, point.x, point.y, this, TRUE);
 #endif
 }
-
-
 // Diagnostyka klasy CWirtualnaKamView
 
 #ifdef _DEBUG
@@ -137,7 +199,6 @@ CWirtualnaKamDoc* CWirtualnaKamView::GetDocument() const // wbudowana jest wersj
 	ASSERT(m_pDocument->IsKindOf(RUNTIME_CLASS(CWirtualnaKamDoc)));
 	return (CWirtualnaKamDoc*)m_pDocument;
 }
-#endif //_DEBUG
-
+#endif //_DEBUG}
 
 // Procedury obsługi komunikatów CWirtualnaKamView
