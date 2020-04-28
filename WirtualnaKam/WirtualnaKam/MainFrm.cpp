@@ -52,6 +52,8 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	BOOL bNameValid;
 
+	this->SetTitle(L"Wirtualna kamera");
+
 	if (!m_wndMenuBar.Create(this))
 	{
 		TRACE0("Nie można utworzyć paska menu\n");
@@ -91,11 +93,11 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	m_wndStatusBar.SetIndicators(indicators, sizeof(indicators)/sizeof(UINT));
 
 	// TODO: Usuń te pięć wierszy, jeśli nie chcesz, aby można było dokować pasek narzędzi i pasek menu
-	m_wndMenuBar.EnableDocking(CBRS_ALIGN_ANY);
-	m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);
-	EnableDocking(CBRS_ALIGN_ANY);
-	DockPane(&m_wndMenuBar);
-	DockPane(&m_wndToolBar);
+	//m_wndMenuBar.EnableDocking(CBRS_ALIGN_ANY);
+	//m_wndToolBar.EnableDocking(CBRS_ALIGN_ANY);
+	//EnableDocking(CBRS_ALIGN_ANY);
+	//DockPane(&m_wndMenuBar);
+	//DockPane(&m_wndToolBar);
 
 
 	// włącz zachowanie okna dokującego w stylu programu Visual Studio 2005

@@ -4,6 +4,9 @@
 
 #pragma once
 
+#include <list>
+
+class Czworokat;
 
 class CWirtualnaKamView : public CView
 {
@@ -44,6 +47,14 @@ protected:
 	afx_msg void OnContextMenu(CWnd* pWnd, CPoint point);
 	afx_msg BOOL PreTranslateMessage(MSG* pMsg);
 	DECLARE_MESSAGE_MAP()
+
+private:
+	void WczytajFigury();
+	void NarysujCzworokat(CDC* pDC, Czworokat c);
+	void NapiszInstrukcje(CDC* pDC);
+
+private:
+	std::list<Czworokat>		lstCzworokaty;
 };
 
 #ifndef _DEBUG  // debuguj wersję w elemencie WirtualnaKamView.cpp

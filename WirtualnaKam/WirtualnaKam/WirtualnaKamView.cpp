@@ -4,8 +4,6 @@
 
 #include "pch.h"
 #include "framework.h"
-// Element SHARED_HANDLERS można zdefiniować w projekcie ATL z implementacją podglądu, miniaturze
-// procedury obsługi serializacji i filtrów wyszukiwania oraz umożliwia udostępnianie kodu dokumentu w tym projekcie.
 #ifndef SHARED_HANDLERS
 #include "WirtualnaKam.h"
 #endif
@@ -20,12 +18,15 @@
 
 Kamera kam;
 
-// CWirtualnaKamView
+/////////////////////////////////////////////////////////////////////////////
+// Kwanty ruchu kamery
+#define KROK_RUCH	1
+#define KROK_OBR	0.03
+#define KROK_ZOOM	0.05
 
 IMPLEMENT_DYNCREATE(CWirtualnaKamView, CView)
 
 BEGIN_MESSAGE_MAP(CWirtualnaKamView, CView)
-	// Standardowe polecenia drukowania
 	ON_COMMAND(ID_FILE_PRINT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_DIRECT, &CView::OnFilePrint)
 	ON_COMMAND(ID_FILE_PRINT_PREVIEW, &CWirtualnaKamView::OnFilePrintPreview)
@@ -34,12 +35,9 @@ BEGIN_MESSAGE_MAP(CWirtualnaKamView, CView)
 	ON_WM_RBUTTONUP()
 END_MESSAGE_MAP()
 
-// Tworzenie/niszczenie obiektu CWirtualnaKamView
-
 CWirtualnaKamView::CWirtualnaKamView() noexcept
 {
 	// TODO: tutaj dodaj kod konstruowania
-
 }
 
 CWirtualnaKamView::~CWirtualnaKamView()
@@ -48,8 +46,7 @@ CWirtualnaKamView::~CWirtualnaKamView()
 
 BOOL CWirtualnaKamView::PreCreateWindow(CREATESTRUCT& cs)
 {
-	// TODO: zmodyfikuj klasę Window lub style w tym miejscu, modyfikując
-	//  styl kaskadowy CREATESTRUCT
+	WczytajFigury();
 
 	return CView::PreCreateWindow(cs);
 }
@@ -59,31 +56,19 @@ BOOL CWirtualnaKamView::PreCreateWindow(CREATESTRUCT& cs)
 void CWirtualnaKamView::OnDraw(CDC* pDC)
 {
 	CWirtualnaKamDoc* pDoc = GetDocument();
+	std::list<Czworokat>::iterator it;
 	ASSERT_VALID(pDoc);
-
-	//Prostokat rect = Prostokat(Punkt(0, 50, 50), Punkt(50, 50, 50), Punkt(50, 0, 50), Punkt(0, 0, 50));
-	Prostokat rect = Prostokat(Punkt(0, 50, 50), Punkt(50, 50, 50), Punkt(50, 0, 50), Punkt(0, 0, 50));
-
 
 	if (!pDoc)
 		return;
 
-	// TODO: tutaj dodaj kod rysowania danych natywnych
-	auto p1 = kam.ObliczPozycjePunktu(rect.w1);
-	auto p2 = kam.ObliczPozycjePunktu(rect.w2);
-	auto p3 = kam.ObliczPozycjePunktu(rect.w3);
-	auto p4 = kam.ObliczPozycjePunktu(rect.w4);
+	for (it = lstCzworokaty.begin(); it != lstCzworokaty.end(); ++it)
+	{
+		NarysujCzworokat(pDC, (*it));
+	}
 
-	pDC->MoveTo(p1.x, p1.y);
-	pDC->LineTo(p2.x, p2.y);
-	pDC->LineTo(p3.x, p3.y);
-	pDC->LineTo(p4.x, p4.y);
-	pDC->LineTo(p1.x, p1.y);
+	NapiszInstrukcje(pDC);
 }
-
-
-// Drukowanie obiektu CWirtualnaKamView
-
 
 void CWirtualnaKamView::OnFilePrintPreview()
 {
@@ -94,18 +79,15 @@ void CWirtualnaKamView::OnFilePrintPreview()
 
 BOOL CWirtualnaKamView::OnPreparePrinting(CPrintInfo* pInfo)
 {
-	// domyślne przygotowanie
 	return DoPreparePrinting(pInfo);
 }
 
 void CWirtualnaKamView::OnBeginPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
 {
-	// TODO: dodaj kolejne inicjowanie przed rozpoczęciem drukowania
 }
 
 void CWirtualnaKamView::OnEndPrinting(CDC* /*pDC*/, CPrintInfo* /*pInfo*/)
 {
-	// TODO: dodaj czyszczenie po drukowaniu
 }
 
 void CWirtualnaKamView::OnRButtonUp(UINT /* nFlags */, CPoint point)
@@ -123,52 +105,62 @@ BOOL CWirtualnaKamView::PreTranslateMessage(MSG* pMsg)
 		switch (pMsg->wParam)
 		{
 		case VK_UP:
-			kam.RuchY(1);
+			kam.RuchY(KROK_RUCH);
 			Invalidate();
 			break;
 		case VK_DOWN:
-			kam.RuchY(-1);
+			kam.RuchY(-KROK_RUCH);
 			Invalidate();
 			break;
 		case VK_LEFT:
-			kam.RuchZ(1);
+			kam.RuchZ(KROK_RUCH);
 			Invalidate();
 			break;
 		case VK_RIGHT:
-			kam.RuchZ(-1);
+			kam.RuchZ(-KROK_RUCH);
 			Invalidate();
 			break;
-		case VK_SHIFT:
-			kam.RuchX(1);
+		case 0x57:
+			kam.RuchX(KROK_RUCH);
 			Invalidate();
 			break;
-		case VK_CONTROL:
-			kam.RuchX(-1);
+		case 0x53:
+			kam.RuchX(-KROK_RUCH);
 			Invalidate();
 			break;
 		case VK_NUMPAD2:
-			kam.ObrotOX(0.03);
+			kam.ObrotOX(KROK_OBR);
 			Invalidate();
 			break;
 		case VK_NUMPAD8:
-			kam.ObrotOX(-0.03);
+			kam.ObrotOX(-KROK_OBR);
 			Invalidate();
 			break;
 		case VK_NUMPAD4:
-			kam.ObrotOY(0.03);
+			kam.ObrotOY(KROK_OBR);
 			Invalidate();
 			break;
 		case VK_NUMPAD6:
-			kam.ObrotOY(-0.03);
+			kam.ObrotOY(-KROK_OBR);
 			Invalidate();
 			break;
 		case VK_PRIOR:
-			kam.ObrotOZ(0.03);
+			kam.ObrotOZ(KROK_OBR);
 			Invalidate();
 			break;
 		case VK_NEXT:
-			kam.ObrotOZ(-0.03);
+			kam.ObrotOZ(-KROK_OBR);
 			Invalidate();
+			break;
+		case 0x45:
+			kam.Zoom(KROK_ZOOM);
+			Invalidate();
+			break;
+		case 0x51:
+			kam.Zoom(-KROK_ZOOM);
+			Invalidate();
+			break;
+		default:
 			break;
 		}
 	}
@@ -181,7 +173,6 @@ void CWirtualnaKamView::OnContextMenu(CWnd* /* pWnd */, CPoint point)
 	theApp.GetContextMenuManager()->ShowPopupMenu(IDR_POPUP_EDIT, point.x, point.y, this, TRUE);
 #endif
 }
-// Diagnostyka klasy CWirtualnaKamView
 
 #ifdef _DEBUG
 void CWirtualnaKamView::AssertValid() const
@@ -194,11 +185,108 @@ void CWirtualnaKamView::Dump(CDumpContext& dc) const
 	CView::Dump(dc);
 }
 
-CWirtualnaKamDoc* CWirtualnaKamView::GetDocument() const // wbudowana jest wersja bez debugowania
+CWirtualnaKamDoc* CWirtualnaKamView::GetDocument() const
 {
 	ASSERT(m_pDocument->IsKindOf(RUNTIME_CLASS(CWirtualnaKamDoc)));
 	return (CWirtualnaKamDoc*)m_pDocument;
 }
 #endif //_DEBUG}
 
-// Procedury obsługi komunikatów CWirtualnaKamView
+void CWirtualnaKamView::NarysujCzworokat(CDC* pDC, Czworokat c)
+{
+	// TODO: tutaj dodaj kod rysowania danych natywnych
+	auto p1 = kam.ObliczPozycjePunktu(c.w1);
+	auto p2 = kam.ObliczPozycjePunktu(c.w2);
+	auto p3 = kam.ObliczPozycjePunktu(c.w3);
+	auto p4 = kam.ObliczPozycjePunktu(c.w4);
+
+	//if (!(p1.x < (-kam.szer) || p1.x > (2 * kam.szer) || p1.y < (-kam.wys) || p1.y > (2 * kam.wys)
+	//	|| p2.x < (-kam.szer) || p2.x > (2 * kam.szer) || p2.y < (-kam.wys) || p2.y > 2 * (kam.wys)))
+	//{
+	//	pDC->MoveTo(p1.x, p1.y);
+	//	pDC->LineTo(p2.x, p2.y);
+	//}
+	//if (!(p2.x < (-kam.szer) || p2.x >(2 * kam.szer) || p2.y < (-kam.wys) || p2.y >(2 * kam.wys)
+	//	|| p3.x < (-kam.szer) || p3.x >(2 * kam.szer) || p3.y < (-kam.wys) || p3.y > 2 * (kam.wys)))
+	//{
+	//	pDC->MoveTo(p2.x, p2.y);
+	//	pDC->LineTo(p3.x, p3.y);
+	//}
+	//if (!(p3.x < (-kam.szer) || p3.x >(2 * kam.szer) || p3.y < (-kam.wys) || p3.y >(2 * kam.wys)
+	//	|| p4.x < (-kam.szer) || p4.x >(2 * kam.szer) || p4.y < (-kam.wys) || p4.y > 2 * (kam.wys)))
+	//{
+	//	pDC->MoveTo(p3.x, p3.y);
+	//	pDC->LineTo(p4.x, p4.y);
+	//}
+	//if (!(p4.x < (-kam.szer) || p4.x >(2 * kam.szer) || p4.y < (-kam.wys) || p4.y >(2 * kam.wys)
+	//	|| p1.x < (-kam.szer) || p1.x >(2 * kam.szer) || p1.y < (-kam.wys) || p1.y > 2 * (kam.wys)))
+	//{
+	//	pDC->MoveTo(p4.x, p4.y);
+	//	pDC->LineTo(p1.x, p1.y);
+	//}
+
+	if (!((p1.x < 0 || p1.x >kam.szer || p1.y < 0 || p1.y >kam.wys)
+		&& !(p2.x < 0 || p2.x >kam.szer || p2.y < 0 || p2.y > kam.wys)))
+	{
+		pDC->MoveTo(p1.x, p1.y);
+		pDC->LineTo(p2.x, p2.y);
+	}
+	if (!((p2.x < 0 || p2.x >kam.szer || p2.y < 0 || p2.y >kam.wys)
+		&& !(p3.x < 0 || p3.x >kam.szer || p3.y < 0 || p3.y > kam.wys)))
+	{
+		pDC->MoveTo(p2.x, p2.y);
+		pDC->LineTo(p3.x, p3.y);
+	}
+	if (!((p3.x < 0 || p3.x >kam.szer || p3.y < 0 || p3.y >kam.wys)
+		&& !(p4.x < 0 || p4.x >kam.szer || p4.y < 0 || p4.y > kam.wys)))
+	{
+		pDC->MoveTo(p3.x, p3.y);
+		pDC->LineTo(p4.x, p4.y);
+	}
+	if (!((p4.x < 0 || p4.x > kam.szer || p4.y < 0 || p4.y >kam.wys)
+		&& !(p1.x < 0 || p1.x > kam.szer || p1.y < 0 || p1.y > kam.wys)))
+	{
+		pDC->MoveTo(p4.x, p4.y);
+		pDC->LineTo(p1.x, p1.y);
+	}
+}
+
+void CWirtualnaKamView::NapiszInstrukcje(CDC* pDC)
+{
+	pDC->TextOut(10, 40, L"Strzałki - Ruch osie X i Y");
+	pDC->TextOut(10, 60, L"W / S - Ruch przód / tył");
+	pDC->TextOut(10, 80, L"Q / E - Zoom");
+	pDC->TextOut(10, 100, L"Numpad 4 / 6 - Obrót oś OY");
+	pDC->TextOut(10, 120, L"Numpad 2 / 8 - Obrót oś OX");
+	pDC->TextOut(10, 140, L"Page Up / Page Down - Obrót oś OZ");
+}
+
+void CWirtualnaKamView::WczytajFigury()
+{
+	CStdioFile		file;
+	CFileException	ex;
+	CString			linia, punkt, poz;
+	int				tabPoz[3];
+	Punkt			tabPunkt[4];
+	int				nPos, pPos;
+
+	lstCzworokaty.clear();
+
+	file.Open(L"..\\scena.csv", CFile::modeRead | CFile::typeText, &ex);
+	while (file.ReadString(linia))
+	{
+		nPos = 0;
+		for (int i = 0; i < 4; i++)
+		{
+			punkt = linia.Tokenize(L";", nPos);
+			pPos = 0;
+			for (int j = 0; j < 3; j++)
+			{
+				poz = punkt.Tokenize(L",", pPos);
+				tabPoz[j] = _wtoi(poz);
+			}
+			tabPunkt[i] = Punkt(tabPoz[0], tabPoz[1], tabPoz[2]);
+		}
+		lstCzworokaty.push_back(Czworokat(tabPunkt[0], tabPunkt[1], tabPunkt[2], tabPunkt[3]));
+	}
+}

@@ -89,5 +89,8 @@
     <None Include="res\WirtualnaKam.rc2">
       <Filter>Pliki zasobów</Filter>
     </None>
+    <None Include="..\scena.csv">
+      <Filter>Pliki zasobów</Filter>
+    </None>
   </ItemGroup>
 </Project>

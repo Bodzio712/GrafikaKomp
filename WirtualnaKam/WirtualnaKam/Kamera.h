@@ -1,7 +1,9 @@
 #pragma once
 
-const int szer = 200;
-const int wys = 150;
+#define _USE_MATH_DEFINES
+#include <math.h>
+
+#define Prostokat Czworokat
 
 class Punkt2D
 {
@@ -19,6 +21,7 @@ public:
 class Punkt
 {
 public:
+	Punkt() {};
 	Punkt(double ix, double iy, double iz)
 	{
 		x = ix;
@@ -31,10 +34,10 @@ public:
 	double z;
 };
 
-class Prostokat
+class Czworokat
 {
 public:
-	Prostokat(Punkt x1, Punkt x2, Punkt x3, Punkt x4)
+	Czworokat(Punkt x1, Punkt x2, Punkt x3, Punkt x4)
 		: w1(x1)
 		, w2(x2)
 		, w3(x3)
@@ -51,22 +54,27 @@ public:
 	Punkt2D ObliczPozycjePunktu(Punkt p);
 
 public:
+	int szer = 1800;
+	int wys = 1000;
+
 	double x = 0;
 	double y = 0;
 	double z = 0;
 
 	double ox = 0;
 	double oy = 0;
-	double oz = 0;
+	double oz = M_PI;
 
-	double zoom = 1;
+	double zoom = 1.01;
 
 public:
 	void RuchX(double krok);
 	void RuchY(double krok);
 	void RuchZ(double krok);
+
 	void ObrotOX(double krok);
 	void ObrotOY(double krok);
 	void ObrotOZ(double krok);
-};
 
+	void Zoom(double ktok);
+};

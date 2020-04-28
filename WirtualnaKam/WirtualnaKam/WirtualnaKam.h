@@ -9,11 +9,6 @@
 
 #include "resource.h"       // główne symbole
 
-
-// CWirtualnaKamApp:
-// Aby uzyskać implementację klasy, zobacz WirtualnaKam.cpp
-//
-
 class CWirtualnaKamApp : public CWinAppEx
 {
 public:
