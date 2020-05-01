@@ -80,5 +80,5 @@ Punkt2D Kamera::ObliczPozycjePunktu(Punkt p)
 	double resx = (((tempx) * (zoom / tempz)) * (wys / 2)) + (szer / 2);
 	double resy = (((tempy) * (zoom / tempz)) * (wys / 2)) + (wys / 2);
 
-	return Punkt2D(resx, resy);
+	return Punkt2D(resx, resy, tempz);
 }

@@ -8,14 +8,16 @@
 class Punkt2D
 {
 public:
-	Punkt2D(double ix, double iy)
+	Punkt2D(double ix, double iy, double iz)
 	{
 		x = ix;
 		y = iy;
+		odl = iz;
 	};
 public:
 	double x;
 	double y;
+	double odl;
 };
 
 class Punkt
@@ -55,11 +57,11 @@ public:
 
 public:
 	int szer = 1800;
-	int wys = 1000;
+	int wys = 1200;
 
 	double x = 0;
 	double y = 0;
-	double z = 0;
+	double z = -100;
 
 	double ox = 0;
 	double oy = 0;
