@@ -65,7 +65,7 @@ public:
 
 	double ox = 0;
 	double oy = 0;
-	double oz = M_PI;
+	double oz = 0;//M_PI;
 
 	double zoom = 1.01;
 
@@ -79,4 +79,18 @@ public:
 	void ObrotOZ(double krok);
 
 	void Zoom(double ktok);
+};
+
+class Poligon
+{
+public:
+	Poligon(const POINT* p, double o)
+		: punkty(p)
+		, odl(o)
+	{
+	};
+
+public:
+	const POINT* punkty;
+	double odl;
 };

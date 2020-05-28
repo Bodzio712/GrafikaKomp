@@ -7,6 +7,7 @@
 #include <list>
 
 class Czworokat;
+class Poligon;
 
 class CWirtualnaKamView : public CView
 {
@@ -50,11 +51,19 @@ protected:
 
 private:
 	void WczytajFigury();
+	void WczytajPoligon(Czworokat c, POINT* pt);
+	void SortujPoligony();
+	void NarysujPoligon(CDC* pDC, Poligon p);
 	void NarysujCzworokat(CDC* pDC, Czworokat c);
 	void NapiszInstrukcje(CDC* pDC);
+	//void DodajWielokaty();
+	//void PodzielWielokat(Czworokat c);
 
 private:
 	std::list<Czworokat>		lstCzworokaty;
+	std::list<Poligon>			lstPoligony;
+	POINT punkty[1000][4];
+
 };
 
 #ifndef _DEBUG  // debuguj wersję w elemencie WirtualnaKamView.cpp

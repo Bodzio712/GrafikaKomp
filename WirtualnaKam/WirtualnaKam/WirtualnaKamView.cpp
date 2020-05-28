@@ -63,7 +63,9 @@ BOOL CWirtualnaKamView::PreCreateWindow(CREATESTRUCT& cs)
 void CWirtualnaKamView::OnDraw(CDC* pDC)
 {
 	CWirtualnaKamDoc* pDoc = GetDocument();
-	std::list<Czworokat>::iterator it;
+	std::list<Czworokat>::iterator	itCzw;
+	std::list<Poligon>::iterator	itPol;
+	int								i = 0;
 	ASSERT_VALID(pDoc);
 
 	if (!pDoc)
@@ -71,9 +73,18 @@ void CWirtualnaKamView::OnDraw(CDC* pDC)
 
 	pDoc->SetTitle(L"Scena domyślna");
 
-	for (it = lstCzworokaty.begin(); it != lstCzworokaty.end(); ++it)
+	lstPoligony.clear();
+
+	for (itCzw = lstCzworokaty.begin(); itCzw != lstCzworokaty.end(); ++itCzw)
 	{
-		NarysujCzworokat(pDC, (*it));
+		WczytajPoligon(*itCzw, punkty[i]);
+		i++;
+		//NarysujCzworokat(DC, (*it));
+	}
+	SortujPoligony();
+	for (itPol = lstPoligony.begin(); itPol != lstPoligony.end(); ++itPol)
+	{
+		NarysujPoligon(pDC, *itPol);
 	}
 
 	NapiszInstrukcje(pDC);
@@ -114,19 +125,19 @@ BOOL CWirtualnaKamView::PreTranslateMessage(MSG* pMsg)
 		switch (pMsg->wParam)
 		{
 		case VK_UP:
-			kam.RuchY(KROK_RUCH);
-			Invalidate();
-			break;
-		case VK_DOWN:
 			kam.RuchY(-KROK_RUCH);
 			Invalidate();
 			break;
+		case VK_DOWN:
+			kam.RuchY(KROK_RUCH);
+			Invalidate();
+			break;
 		case VK_LEFT:
-			kam.RuchZ(KROK_RUCH);
+			kam.RuchZ(-KROK_RUCH);
 			Invalidate();
 			break;
 		case VK_RIGHT:
-			kam.RuchZ(-KROK_RUCH);
+			kam.RuchZ(KROK_RUCH);
 			Invalidate();
 			break;
 		case 0x57:
@@ -209,56 +220,40 @@ void CWirtualnaKamView::NarysujCzworokat(CDC* pDC, Czworokat c)
 	auto p3 = kam.ObliczPozycjePunktu(c.w3);
 	auto p4 = kam.ObliczPozycjePunktu(c.w4);
 
-	if (!(p1.x < (-kam.szer*SKALA_OGRANICZEN) || p1.x > ((1+SKALA_OGRANICZEN) * kam.szer) || p1.y < (-kam.wys*SKALA_OGRANICZEN) || p1.y > ((1+SKALA_OGRANICZEN) * kam.wys) || p1.odl < 0
-		|| p2.x < (-kam.szer*SKALA_OGRANICZEN) || p2.x > ((1+SKALA_OGRANICZEN) * kam.szer) || p2.y < (-kam.wys*SKALA_OGRANICZEN) || p2.y >((1 + SKALA_OGRANICZEN) * kam.wys) || p2.odl < 0))
-	{
-		pDC->MoveTo(p1.x, p1.y);
-		pDC->LineTo(p2.x, p2.y);
-	}
-	if (!(p2.x < (-kam.szer*SKALA_OGRANICZEN) || p2.x >((1+SKALA_OGRANICZEN) * kam.szer) || p2.y < (-kam.wys*SKALA_OGRANICZEN) || p2.y >((1+SKALA_OGRANICZEN) * kam.wys) || p1.odl < 0
-		|| p3.x < (-kam.szer*SKALA_OGRANICZEN) || p3.x >((1+SKALA_OGRANICZEN) * kam.szer) || p3.y < (-kam.wys*SKALA_OGRANICZEN) || p3.y > 2 * ((1 + SKALA_OGRANICZEN) * kam.wys) || p2.odl < 0))
-	{
-		pDC->MoveTo(p2.x, p2.y);
-		pDC->LineTo(p3.x, p3.y);
-	}
-	if (!(p3.x < (-kam.szer*SKALA_OGRANICZEN) || p3.x >((1+SKALA_OGRANICZEN) * kam.szer) || p3.y < (-kam.wys*SKALA_OGRANICZEN) || p3.y >((1+SKALA_OGRANICZEN) * kam.wys) || p1.odl < 0
-		|| p4.x < (-kam.szer*SKALA_OGRANICZEN) || p4.x >((1+SKALA_OGRANICZEN) * kam.szer) || p4.y < (-kam.wys*SKALA_OGRANICZEN) || p4.y > 2 * ((1 + SKALA_OGRANICZEN) * kam.wys) || p2.odl < 0))
-	{
-		pDC->MoveTo(p3.x, p3.y);
-		pDC->LineTo(p4.x, p4.y);
-	}
-	if (!(p4.x < (-kam.szer*SKALA_OGRANICZEN) || p4.x >((1+SKALA_OGRANICZEN) * kam.szer) || p4.y < (-kam.wys*SKALA_OGRANICZEN) || p4.y >((1+SKALA_OGRANICZEN) * kam.wys) || p1.odl < 0
-		|| p1.x < (-kam.szer*SKALA_OGRANICZEN) || p1.x >((1+SKALA_OGRANICZEN) * kam.szer) || p1.y < (-kam.wys*SKALA_OGRANICZEN) || p1.y > 2 * ((1 + SKALA_OGRANICZEN) * kam.wys) || p2.odl < 0))
-	{
-		pDC->MoveTo(p4.x, p4.y);
-		pDC->LineTo(p1.x, p1.y);
-	}
-
-	//if (!((p1.x < 0 || p1.x >kam.szer || p1.y < 0 || p1.y >kam.wys)
-	//	&& !(p2.x < 0 || p2.x >kam.szer || p2.y < 0 || p2.y > kam.wys)))
+	//if (!(p1.x < (-kam.szer*SKALA_OGRANICZEN) || p1.x > ((1+SKALA_OGRANICZEN) * kam.szer) || p1.y < (-kam.wys*SKALA_OGRANICZEN) || p1.y > ((1+SKALA_OGRANICZEN) * kam.wys) || p1.odl < 0
+	//	|| p2.x < (-kam.szer*SKALA_OGRANICZEN) || p2.x > ((1+SKALA_OGRANICZEN) * kam.szer) || p2.y < (-kam.wys*SKALA_OGRANICZEN) || p2.y >((1 + SKALA_OGRANICZEN) * kam.wys) || p2.odl < 0))
 	//{
 	//	pDC->MoveTo(p1.x, p1.y);
 	//	pDC->LineTo(p2.x, p2.y);
 	//}
-	//if (!((p2.x < 0 || p2.x >kam.szer || p2.y < 0 || p2.y >kam.wys)
-	//	&& !(p3.x < 0 || p3.x >kam.szer || p3.y < 0 || p3.y > kam.wys)))
+	//if (!(p2.x < (-kam.szer*SKALA_OGRANICZEN) || p2.x >((1+SKALA_OGRANICZEN) * kam.szer) || p2.y < (-kam.wys*SKALA_OGRANICZEN) || p2.y >((1+SKALA_OGRANICZEN) * kam.wys) || p1.odl < 0
+	//	|| p3.x < (-kam.szer*SKALA_OGRANICZEN) || p3.x >((1+SKALA_OGRANICZEN) * kam.szer) || p3.y < (-kam.wys*SKALA_OGRANICZEN) || p3.y > 2 * ((1 + SKALA_OGRANICZEN) * kam.wys) || p2.odl < 0))
 	//{
 	//	pDC->MoveTo(p2.x, p2.y);
 	//	pDC->LineTo(p3.x, p3.y);
 	//}
-	//if (!((p3.x < 0 || p3.x >kam.szer || p3.y < 0 || p3.y >kam.wys)
-	//	&& !(p4.x < 0 || p4.x >kam.szer || p4.y < 0 || p4.y > kam.wys)))
+	//if (!(p3.x < (-kam.szer*SKALA_OGRANICZEN) || p3.x >((1+SKALA_OGRANICZEN) * kam.szer) || p3.y < (-kam.wys*SKALA_OGRANICZEN) || p3.y >((1+SKALA_OGRANICZEN) * kam.wys) || p1.odl < 0
+	//	|| p4.x < (-kam.szer*SKALA_OGRANICZEN) || p4.x >((1+SKALA_OGRANICZEN) * kam.szer) || p4.y < (-kam.wys*SKALA_OGRANICZEN) || p4.y > 2 * ((1 + SKALA_OGRANICZEN) * kam.wys) || p2.odl < 0))
 	//{
 	//	pDC->MoveTo(p3.x, p3.y);
 	//	pDC->LineTo(p4.x, p4.y);
 	//}
-	//if (!((p4.x < 0 || p4.x > kam.szer || p4.y < 0 || p4.y >kam.wys)
-	//	&& !(p1.x < 0 || p1.x > kam.szer || p1.y < 0 || p1.y > kam.wys)))
+	//if (!(p4.x < (-kam.szer*SKALA_OGRANICZEN) || p4.x >((1+SKALA_OGRANICZEN) * kam.szer) || p4.y < (-kam.wys*SKALA_OGRANICZEN) || p4.y >((1+SKALA_OGRANICZEN) * kam.wys) || p1.odl < 0
+	//	|| p1.x < (-kam.szer*SKALA_OGRANICZEN) || p1.x >((1+SKALA_OGRANICZEN) * kam.szer) || p1.y < (-kam.wys*SKALA_OGRANICZEN) || p1.y > 2 * ((1 + SKALA_OGRANICZEN) * kam.wys) || p2.odl < 0))
 	//{
 	//	pDC->MoveTo(p4.x, p4.y);
 	//	pDC->LineTo(p1.x, p1.y);
 	//}
+	
+	//POINT punkty[] = {CPoint(p1.x, p1.y), CPoint(p2.x, p2.y) , CPoint(p3.x, p3.y) , CPoint(p4.x, p4.y) };
+	//Polygon(pDC->GetSafeHdc(), punkty, 4);
 }
+
+void CWirtualnaKamView::NarysujPoligon(CDC* pDC, Poligon p)
+{
+	Polygon(pDC->GetSafeHdc(), p.punkty, 4);
+}
+
 
 void CWirtualnaKamView::NapiszInstrukcje(CDC* pDC)
 {
@@ -298,4 +293,35 @@ void CWirtualnaKamView::WczytajFigury()
 		}
 		lstCzworokaty.push_back(Czworokat(tabPunkt[0], tabPunkt[1], tabPunkt[2], tabPunkt[3]));
 	}
+}
+
+void CWirtualnaKamView::WczytajPoligon(Czworokat c, POINT* pt)
+{
+	auto p1 = kam.ObliczPozycjePunktu(c.w1);
+	auto p2 = kam.ObliczPozycjePunktu(c.w2);
+	auto p3 = kam.ObliczPozycjePunktu(c.w3);
+	auto p4 = kam.ObliczPozycjePunktu(c.w4);
+
+	double x = kam.ox - ((c.w1.x + c.w2.x + c.w3.x + c.w4.x) / 4);
+	double y = kam.oy - ((c.w1.y + c.w2.y + c.w3.y + c.w4.y) / 4);
+	double z = kam.oz - ((c.w1.z + c.w2.z + c.w3.z + c.w4.z) / 4);
+
+	double odl = sqrt(x*x + y*y + z*z);
+
+	pt[0] = CPoint(p1.x, p1.y);
+	pt[1] = CPoint(p2.x, p2.y);
+	pt[2] = CPoint(p3.x, p3.y);
+	pt[3] = CPoint(p4.x, p4.y);
+
+	lstPoligony.push_back(Poligon(pt, odl));
+}
+
+bool Porownaj(Poligon a, Poligon b)
+{
+	return (a.odl >  b.odl);
+}
+
+void CWirtualnaKamView::SortujPoligony()
+{
+	lstPoligony.sort(Porownaj);
 }
